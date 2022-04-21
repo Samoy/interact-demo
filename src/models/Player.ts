@@ -1,16 +1,11 @@
 /**
- * 定义人机模型，包含一些属性
+ * 定义选手模型，包含一些属性
  */
-
-interface IPlayer {
+export interface IPlayer {
   /**
-   *名字
+   *名字，可当作唯一标识
    */
-  name: string
-  /**
-   * id，唯一标识
-   */
-  id: string
+  readonly name: string
   /**
    * 累计分数
    */
@@ -22,8 +17,5 @@ interface IPlayer {
   /**
    * 是否是机器人
    */
-  isRobot?: boolean
-  /**
-   * 角色：红方或者蓝方
-   */
+  readonly isRobot?: boolean
 }

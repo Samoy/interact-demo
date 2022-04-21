@@ -1,0 +1,14 @@
+//定义游戏有关action
+export const START_GAME = 'STAR_TGAME'
+export const END_GAME = 'END_GAME'
+//定义对局有关action
+export const START_ROUND = 'START_ROUND'
+export const END_ROUND = 'END_ROUND'
+// 定义人类相关action
+export const CORRECT_QUESTION_BY_HUMAN = 'CORRECT_QUESTION_BY_HUMAN'
+export const INCORRECT_QUESTION_BY_HUMAN = 'INCORRECTQUESTION_BY_HUMAN'
+export const ESCAPE_BY_HUMAN = 'ESCAPE_BY_HUMAN'
+export const TIMEOUT_BY_HUMAN = 'TIMEOUT_BY_HUMAN'
+// 机器人只有回答正确和回答错误两个action
+export const CORRECT_QUESTION_BY_ROBOT = 'CORRECT_QUESTION_BY_ROBOT'
+export const INCORRECT_QUESTION_BY_ROBOT = 'INCORRECT_QUESTION_BY_ROBOT'
