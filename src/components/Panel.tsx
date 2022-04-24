@@ -107,8 +107,9 @@ export function Panel() {
         return
       }
       if (questionIndex >= 0) {
-        // 超时处理
+        // 超时处理，机器人得分
         if (countDown <= 1) {
+          dispatch({ type: CORRECT_QUESTION_BY_ROBOT })
           clearTimer()
           setQuestionIndex((index) => index + 1)
           setCountDown(MAX_COUNT_DOWN)
@@ -160,7 +161,7 @@ export function Panel() {
     setTimeout(() => {
       setPicked(false)
       setHumanAnswerIndex(-1)
-      setRobotAnswerIndex(- 1)
+      setRobotAnswerIndex(-1)
       setCountDown(MAX_COUNT_DOWN)
       setQuestionIndex((index) => index + 1)
     }, 1000)
