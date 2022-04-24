@@ -207,7 +207,7 @@ export function Panel() {
               <div>
                 {human.roundScore > robot.roundScore
                   ? '你赢了!'
-                  : human.roundScore == robot.roundScore
+                  : human.roundScore === robot.roundScore
                   ? '平局'
                   : '你输了！'}
               </div>
@@ -220,7 +220,7 @@ export function Panel() {
                   <div key={index} className="answer-item-wrap">
                     <div
                       className={`${
-                        humanAnswerIndex == index ? 'answer-picker' : ''
+                        humanAnswerIndex === index ? 'answer-picker' : ''
                       }`}
                     ></div>
                     <div
