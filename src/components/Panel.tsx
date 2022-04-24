@@ -24,6 +24,9 @@ export function Panel() {
   const [btnTitle, setBtnTitle] = useState('开始答题')
   const [question, setQuestion] = useState<IQuestion>()
   const [questionIndex, setQuestionIndex] = useState(-1)
+  const [humanAnswerIndex, setHumanAnswerIndex] = useState(-1)
+  const [robotAnswerIndex, setRobotAnswerIndex] = useState(-1)
+  const [picked, setPicked] = useState(false)
   const { game, round, human, robot } = state
 
   useEffect(() => {
@@ -33,18 +36,18 @@ export function Panel() {
   }, [round.questions])
 
   useEffect(() => {
-    if (game.status == EnumGameStatus.Ready) {
+    if (game.status === EnumGameStatus.Ready) {
       setBtnTitle('开始答题')
       dispatch({
         type: START_GAME,
       })
       return
     }
-    if (round.status == EnumGameStatus.Doing) {
+    if (round.status === EnumGameStatus.Doing) {
       setBtnTitle('逃跑')
       return
     }
-    if (round.status == EnumGameStatus.Finished) {
+    if (round.status === EnumGameStatus.Finished) {
       setBtnTitle('再来一局')
     }
   }, [round.status])
@@ -66,11 +69,13 @@ export function Panel() {
       })
       return
     }
-    if (btnTitle == '开始答题' || btnTitle == '再来一局') {
+    if (btnTitle === '开始答题' || btnTitle === '再来一局') {
       startRound()
     }
-    if (btnTitle == '逃跑') {
-      if (confirm('确定逃跑吗？逃跑本轮将不在获得积分，且失去一次对局次数')) {
+    if (btnTitle === '逃跑') {
+      if (
+        window.confirm('确定逃跑吗？逃跑本轮将不在获得积分，且失去一次对局次数')
+      ) {
         dispatch({
           type: ESCAPE_BY_HUMAN,
         })
@@ -95,8 +100,8 @@ export function Panel() {
     let timer = setInterval(() => {
       // 当对局为挂起或者完成状态，停止倒计时
       if (
-        round.status == EnumGameStatus.Finished ||
-        round.status == EnumGameStatus.Suspend
+        round.status === EnumGameStatus.Finished ||
+        round.status === EnumGameStatus.Suspend
       ) {
         clearTimer()
         return
@@ -127,7 +132,9 @@ export function Panel() {
   }
 
   // 选择答案
-  function pickerAnswer(question: IQuestion, answer: IAnswer) {
+  function pickerAnswer(question: IQuestion, answer: IAnswer, index: number) {
+    setHumanAnswerIndex(index)
+    setPicked(true)
     // 选择正确
     if (answer.isCorrect) {
       dispatch({
@@ -136,6 +143,7 @@ export function Panel() {
       // 机器人随机选择一个选项
       const robotIndex = Math.round(Math.random() * 3)
       const robotAnswer = question.answers[robotIndex]
+      setRobotAnswerIndex(robotIndex)
       // 机器人选择正确
       if (robotAnswer.isCorrect) {
         dispatch({
@@ -149,8 +157,13 @@ export function Panel() {
         type: INCORRECT_QUESTION_BY_HUMAN,
       })
     }
-    setCountDown(MAX_COUNT_DOWN)
-    setQuestionIndex((index) => index + 1)
+    setTimeout(() => {
+      setPicked(false)
+      setHumanAnswerIndex(-1)
+      setRobotAnswerIndex(- 1)
+      setCountDown(MAX_COUNT_DOWN)
+      setQuestionIndex((index) => index + 1)
+    }, 1000)
   }
 
   return (
@@ -186,20 +199,50 @@ export function Panel() {
         </header>
         <div className="content">
           <ProgressBar showValue value={human.roundScore}></ProgressBar>
-          <div className="question">
-            <div className="title">{question?.title}</div>
-            <div className="answer">
-              {question?.answers.map((o, index) => (
-                <div
-                  key={index}
-                  className="answer-item"
-                  onClick={() => pickerAnswer(question, o)}
-                >
-                  {o.title}
-                </div>
-              ))}
+          {round.status === EnumGameStatus.Finished ? (
+            <div className="result">
+              <div>
+                {human.roundScore}&nbsp;:&nbsp;{robot.roundScore}
+              </div>
+              <div>
+                {human.roundScore > robot.roundScore
+                  ? '你赢了!'
+                  : human.roundScore == robot.roundScore
+                  ? '平局'
+                  : '你输了！'}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="question">
+              <div className="title">{question?.title}</div>
+              <div className="answer">
+                {question?.answers.map((o, index) => (
+                  <div key={index} className="answer-item-wrap">
+                    <div
+                      className={`${
+                        humanAnswerIndex == index ? 'answer-picker' : ''
+                      }`}
+                    ></div>
+                    <div
+                      className="answer-item"
+                      onClick={() => pickerAnswer(question, o, index)}
+                      style={{
+                        backgroundColor:
+                          picked && o.isCorrect ? '#00ff00' : '#1890ff',
+                      }}
+                    >
+                      {o.title}
+                    </div>
+                    <div
+                      className={`${
+                        robotAnswerIndex == index ? 'answer-picker' : ''
+                      }`}
+                    ></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <ProgressBar showValue value={robot.roundScore}></ProgressBar>
         </div>
       </section>

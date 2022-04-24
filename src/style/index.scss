@@ -64,19 +64,34 @@
             display: flex;
             justify-content: center;
             flex-direction: column;
-            .answer-item {
+            .answer-item-wrap {
               display: flex;
-              justify-content: center;
-              color: #fff;
+              justify-content: space-around;
               align-items: center;
-              margin: 8px 0;
-              background-color: #1890ff;
-              height: 35px;
-              border-radius: 17.5px;
-              width: 300px;
-              text-align: center;
+              .answer-item {
+                display: flex;
+                justify-content: center;
+                color: #fff;
+                align-items: center;
+                margin: 8px;
+                background-color: #1890ff;
+                height: 35px;
+                border-radius: 17.5px;
+                width: 200px;
+                text-align: center;
+              }
+              .answer-picker {
+                width: 20px;
+                height: 20px;
+                border-radius: 10px;
+                background: #1890ff;
+              }
             }
           }
+        }
+        .result {
+          font-size: 32px;
+          text-align: center;
         }
       }
     }
