@@ -1,59 +1,147 @@
 import { useEffect, useState } from 'react'
 import { QuestionLibray } from '../lib/question_library'
+import { EnumGameStatus } from '../models/enum'
 import { IAnswer, IQuestion } from '../models/QA'
 import { useDispatch, useGlobalState } from '../store'
 import {
   CORRECT_QUESTION_BY_HUMAN,
   CORRECT_QUESTION_BY_ROBOT,
+  END_GAME,
+  END_ROUND,
+  ESCAPE_BY_HUMAN,
   INCORRECT_QUESTION_BY_HUMAN,
   START_GAME,
   START_ROUND,
 } from '../store/actionTypes'
 import { ProgressBar } from './ProgressBar'
 
+const MAX_COUNT_DOWN = 10
+
 export function Panel() {
   const state = useGlobalState()
   const dispatch = useDispatch()
-  const [countDown, setCountDown] = useState(10)
+  const [countDown, setCountDown] = useState(MAX_COUNT_DOWN)
+  const [btnTitle, setBtnTitle] = useState('开始答题')
   const [question, setQuestion] = useState<IQuestion>()
+  const [questionIndex, setQuestionIndex] = useState(-1)
   const { game, round, human, robot } = state
-  let timeout: NodeJS.Timeout
 
   useEffect(() => {
-    nextQuestion(0)
+    if (round.questions.length > 0) {
+      setQuestionIndex(0)
+    }
   }, [round.questions])
 
-  /**
-   *开始对局
-   */
+  useEffect(() => {
+    if (game.status == EnumGameStatus.Ready) {
+      setBtnTitle('开始答题')
+      dispatch({
+        type: START_GAME,
+      })
+      return
+    }
+    if (round.status == EnumGameStatus.Doing) {
+      setBtnTitle('逃跑')
+      return
+    }
+    if (round.status == EnumGameStatus.Finished) {
+      setBtnTitle('再来一局')
+    }
+  }, [round.status])
+
+  useEffect(() => {
+    if (round.questions.length && questionIndex >= round.questions.length) {
+      endRound()
+      return
+    }
+    setQuestion(round.questions[questionIndex])
+  }, [round.questions, questionIndex])
+
+  function onBtnClick() {
+    if (game.roundNum - game.currentRound <= 0) {
+      alert('您今天已经没有游戏次数了，请明天再来吧！')
+      setBtnTitle('明天再来挑战吧！')
+      dispatch({
+        type: END_GAME,
+      })
+      return
+    }
+    if (btnTitle == '开始答题' || btnTitle == '再来一局') {
+      startRound()
+    }
+    if (btnTitle == '逃跑') {
+      if (confirm('确定逃跑吗？逃跑本轮将不在获得积分，且失去一次对局次数')) {
+        dispatch({
+          type: ESCAPE_BY_HUMAN,
+        })
+        dispatch({
+          type: END_ROUND,
+        })
+        setCountDown(MAX_COUNT_DOWN)
+      }
+    }
+  }
+
+  // 开始对局
   function startRound() {
+    setQuestionIndex(-1)
     dispatch({
       type: START_ROUND,
       payload: QuestionLibray,
     })
   }
 
-  /**
-   * 结束对局
-   */
-  function endRound() {}
+  useEffect(() => {
+    let timer = setInterval(() => {
+      // 当对局为挂起或者完成状态，停止倒计时
+      if (
+        round.status == EnumGameStatus.Finished ||
+        round.status == EnumGameStatus.Suspend
+      ) {
+        clearTimer()
+        return
+      }
+      if (questionIndex >= 0) {
+        // 超时处理
+        if (countDown <= 1) {
+          clearTimer()
+          setQuestionIndex((index) => index + 1)
+          setCountDown(MAX_COUNT_DOWN)
+          return
+        }
+        setCountDown((count) => count - 1)
+      }
+    }, 1000)
 
-  /**
-   * 开始下一问题
-   */
-  function nextQuestion(index: number) {
-    setQuestion(round.questions[index])
+    function clearTimer() {
+      timer && clearInterval(timer)
+    }
+    return clearTimer
+  }, [countDown, questionIndex, round.status])
+
+  // 结束对局
+  function endRound() {
+    dispatch({
+      type: END_ROUND,
+    })
   }
 
-  /**
-   * 选择问题
-   */
-  function pickerAnswer(answer: IAnswer) {
+  // 选择答案
+  function pickerAnswer(question: IQuestion, answer: IAnswer) {
     // 选择正确
     if (answer.isCorrect) {
       dispatch({
         type: CORRECT_QUESTION_BY_HUMAN,
       })
+      // 机器人随机选择一个选项
+      const robotIndex = Math.round(Math.random() * 3)
+      const robotAnswer = question.answers[robotIndex]
+      // 机器人选择正确
+      if (robotAnswer.isCorrect) {
+        dispatch({
+          type: CORRECT_QUESTION_BY_ROBOT,
+        })
+      }
     }
     // 选择错误，默认机器人选择正确
     if (!answer.isCorrect) {
@@ -61,8 +149,8 @@ export function Panel() {
         type: INCORRECT_QUESTION_BY_HUMAN,
       })
     }
-    timeout && clearTimeout(timeout)
-    setCountDown(10)
+    setCountDown(MAX_COUNT_DOWN)
+    setQuestionIndex((index) => index + 1)
   }
 
   return (
@@ -78,8 +166,18 @@ export function Panel() {
         </span>
       </header>
       <section className="section">
-        <button className="button" onClick={startRound}>
-          开始答题
+        <button
+          disabled={game.roundNum - game.currentRound <= 0}
+          className="button"
+          onClick={onBtnClick}
+          style={{
+            backgroundColor:
+              game.roundNum - game.currentRound <= 0 ? '#ccc' : '#1890ff',
+          }}
+        >
+          {game.roundNum - game.currentRound <= 0
+            ? '今天次数已用完，明天再来挑战吧'
+            : btnTitle}
         </button>
         <header className="header">
           <span>{human.name}</span>
@@ -95,7 +193,7 @@ export function Panel() {
                 <div
                   key={index}
                   className="answer-item"
-                  onClick={() => pickerAnswer(o)}
+                  onClick={() => pickerAnswer(question, o)}
                 >
                   {o.title}
                 </div>

@@ -97,7 +97,7 @@ export const QuestionLibray: IQuestion[] = [
       },
       {
         title: 'Map',
-        isCorrect: true,
+        isCorrect: false,
       },
       {
         title: 'List',
@@ -105,7 +105,7 @@ export const QuestionLibray: IQuestion[] = [
       },
       {
         title: 'int',
-        isCorrect: false,
+        isCorrect: true,
       },
     ],
   },

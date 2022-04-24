@@ -86,6 +86,14 @@ export const reducer = (state: IGlobalState, action: IAction): IGlobalState => {
           ...game,
           currentRound: game.currentRound + 1,
         },
+        robot: {
+          ...robot,
+          roundScore: 0,
+        },
+        human: {
+          ...human,
+          roundScore: 0,
+        },
       }
     case END_ROUND:
       return {
